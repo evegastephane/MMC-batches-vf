@@ -1,0 +1,393 @@
+/* MMC Batch : langage Power Query aux couleurs MoMo.
+   Sombre par défaut (graphite teinté du bleu MoMo), thème blanc au choix (data-theme="light").
+   Jaune MoMo = action principale de l'écran et cellule sélectionnée ; jaune pâle = valeur du fichier ;
+   bleu = valeur saisie ; rouge = champ manquant ou valeur à corriger. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --titlebar: #04121a;
+  --chrome-text: #dfe9ee;
+  --chrome-hover: rgb(255 255 255 / 0.08);
+  --chrome-press: rgb(255 255 255 / 0.14);
+  --ribbon: #0a1922;
+  --bg: #0b1820; /* fond du canevas */
+  --surface: #0f1f28; /* volets, menus */
+  --surface-2: #142731; /* survol */
+  --sheet: #0d1b23; /* cellules */
+  --head: #12242e; /* en-têtes de lignes et colonnes */
+  --grid: #1d3540; /* filets de la grille */
+  --border: #22404c;
+  --border-strong: #3b5c6a;
+  --text: #e5eef2;
+  --text-2: #a7bac4;
+  --text-3: #85a0ab;
+
+  --momo-navy: #004f71;
+  --accent: #ffcb05; /* jaune MoMo */
+  --accent-hover: #ffd63a;
+  --accent-press: #e9b800;
+  --on-accent: #00293b;
+  --ring: #ffcb05; /* cellule sélectionnée, focus */
+  --link: #86cbeb; /* texte interactif, bleu MoMo éclairci */
+  --tint-50: rgb(134 203 235 / 0.07);
+  --tint-100: rgb(134 203 235 / 0.15);
+
+  --file-fill: rgb(255 203 5 / 0.13);
+  --file-line: rgb(255 203 5 / 0.45);
+  --file-text: #ffd94f;
+  --input-fill: rgb(0 120 171 / 0.3);
+  --input-text: #a9dcf4;
+  --bad-fill: rgb(240 82 72 / 0.17);
+  --bad-text: #ff9c92;
+
+  --danger: #ff8f84;
+  --danger-50: rgb(240 82 72 / 0.12);
+  --danger-line: rgb(240 82 72 / 0.42);
+  --ok-fill: rgb(134 203 235 / 0.1);
+  --ok-line: rgb(134 203 235 / 0.35);
+  --disabled-fill: #172a33;
+  --disabled-text: #67818c;
+  --selection: rgb(255 203 5 / 0.32);
+  --scrim: rgb(2 10 14 / 0.55);
+  --menu-shadow: 0 10px 28px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --titlebar: #004f71;
+  --chrome-text: #ffffff;
+  --chrome-hover: rgb(255 255 255 / 0.12);
+  --chrome-press: rgb(255 255 255 / 0.2);
+  --ribbon: #ffffff;
+  --bg: #eef2f5;
+  --surface: #ffffff;
+  --surface-2: #f3f6f8;
+  --sheet: #ffffff;
+  --head: #f3f6f8;
+  --grid: #dfe6eb;
+  --border: #d5dfe6;
+  --border-strong: #a9bbc7;
+  --text: #13222b;
+  --text-2: #42535e;
+  --text-3: #5d6f7a;
+
+  --accent: #ffcb05;
+  --accent-hover: #f2bf00;
+  --accent-press: #e3b300;
+  --on-accent: #00293b;
+  --ring: #004f71; /* le jaune ne se lit pas en filet sur blanc */
+  --link: #004f71;
+  --tint-50: #e9f1f5;
+  --tint-100: #d3e3eb;
+
+  --file-fill: #fff5cc;
+  --file-line: #e2b300;
+  --file-text: #00405c;
+  --input-fill: #e1eef6;
+  --input-text: #004f71;
+  --bad-fill: #fdeceb;
+  --bad-text: #b42318;
+
+  --danger: #b42318;
+  --danger-50: #fdeceb;
+  --danger-line: #f2c4bf;
+  --ok-fill: #e9f1f5;
+  --ok-line: #d3e3eb;
+  --disabled-fill: #e7edf1;
+  --disabled-text: #6b7d88;
+  --selection: #ffe27a;
+  --scrim: rgb(19 34 43 / 0.25);
+  --menu-shadow: 0 10px 28px rgb(19 34 43 / 0.16), 0 2px 6px rgb(19 34 43 / 0.08);
+}
+
+:root {
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, "Courier New", monospace;
+  --radius: 4px; /* contrôles Office : coins à peine adoucis */
+  --row: 26px; /* hauteur d'une ligne de grille */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* Application de bureau, pas page web : curseur flèche partout (la main n'existe pas sous Windows
+   hors liens), texte de l'interface non sélectionnable, seuls les champs et les octets du fichier le sont. */
+body {
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  accent-color: var(--momo-navy);
+  scrollbar-color: var(--border-strong) transparent;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+.selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+:root[data-theme="dark"] body,
+:root:not([data-theme]) body {
+  accent-color: var(--accent);
+}
+
+#app {
+  height: 100%;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--text);
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+select {
+  caret-color: var(--ring);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* Barres de défilement fines, dans la teinte du thème. */
+* {
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--border-strong) padding-box;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* --- Boutons (ruban Office : plats, coins à peine adoucis) ---------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color 90ms ease-out,
+    border-color 90ms ease-out,
+    color 90ms ease-out;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Action principale de l'écran : jaune MoMo, texte bleu nuit. */
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.btn-primary:active:not(:disabled) {
+  background: var(--accent-press);
+}
+
+.btn-secondary {
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--link);
+  background: var(--tint-50);
+}
+
+.btn-ghost {
+  color: var(--link);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--tint-50);
+}
+
+.btn-primary:disabled {
+  background: var(--disabled-fill);
+  color: var(--disabled-text);
+}
+
+.btn-secondary:disabled,
+.btn-ghost:disabled {
+  border-color: transparent;
+  background: none;
+  color: var(--disabled-text);
+}
+
+.btn-mini {
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12.5px;
+}
+
+.btn-mini .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+/* --- Champs ------------------------------------------------------------ */
+.input {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  color: var(--text);
+  font-size: 13px;
+  transition:
+    border-color 90ms ease-out,
+    box-shadow 90ms ease-out;
+}
+
+.input:hover {
+  border-color: var(--text-3);
+}
+
+.input::placeholder {
+  color: var(--text-3);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+.select {
+  appearance: none;
+  padding-right: 28px;
+  background: var(--sheet)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2385a0ab' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 9px center;
+}
+
+.select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+kbd {
+  padding: 0 4px;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 3px;
+  font: 600 10.5px/1.5 var(--font-ui);
+}
+
+/* Petites capitales des barres d'état et des en-têtes de volet (façon Power Query). */
+.caps {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Menu déroulant (types d'en-tête, type d'une valeur). */
+.menu {
+  position: absolute;
+  z-index: 20;
+  min-width: 220px;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--menu-shadow);
+  animation: menu-in 160ms var(--ease-out);
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+}

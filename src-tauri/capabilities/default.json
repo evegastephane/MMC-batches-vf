@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Fenêtre principale : boîte de dialogue Ouvrir (fichier Excel ou dossier de sortie) et barre de titre de l'application (déplacer, réduire, agrandir, fermer). Lecture, écriture et historique sont faits côté Rust.",
+  "windows": ["main"],
+  "permissions": [
+    "dialog:allow-open",
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-is-maximized",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
+}
